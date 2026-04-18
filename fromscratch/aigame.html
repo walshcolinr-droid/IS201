@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whack-a-Cougar</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #002e5d, #0b1f3a 60%, #081526);
+      color: white;
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: min(980px, 100%);
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.16);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 14px 20px;
+      background: rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .top-nav a {
+      text-decoration: none;
+      color: #e0f2fe;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+    }
+
+    .top-nav a:hover {
+      background: rgba(255,255,255,0.18);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .top-nav a:active {
+      transform: translateY(1px);
+    }
+
+    .header {
+      padding: 24px;
+      background: linear-gradient(90deg, #004b8d, #0062b8);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 3.4vw, 3rem);
+      line-height: 1;
+    }
+
+    .header p {
+      margin: 8px 0 0;
+      color: #dbeafe;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 10px 14px;
+      min-width: 95px;
+      text-align: center;
+    }
+
+    .stat .label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #dbeafe;
+      margin-bottom: 4px;
+    }
+
+    .stat .value {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .main {
+      padding: 22px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .controls p {
+      margin: 0;
+      color: #cbd5e1;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .start-btn {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .reset-btn {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      cursor: none;
+      position: relative;
+    }
+
+    .hole,
+    .mole {
+      cursor: none;
+    }
+
+    .hole {
+      background: linear-gradient(180deg, #14532d, #166534);
+      border-radius: 26px;
+      padding: 10px;
+      border: 3px solid rgba(255,255,255,0.12);
+      min-height: 170px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 -14px 0 rgba(0,0,0,0.18);
+    }
+
+    .hole::after {
+      content: "";
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 8px;
+      height: 24px;
+      background: rgba(10, 30, 10, 0.45);
+      border-radius: 50%;
+    }
+
+    .mole {
+      position: absolute;
+      left: 50%;
+      bottom: -130px;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 120px;
+      transition: bottom 0.18s ease;
+      user-select: none;
+    }
+
+    .hole.up .mole {
+      bottom: 18px;
+    }
+
+    .mole .head {
+      width: 92px;
+      height: 82px;
+      background: #c6925c;
+      border: 3px solid #6b4a2c;
+      border-radius: 46px;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: inset 0 -8px 0 rgba(0,0,0,0.08);
+    }
+
+    .mole .ear {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      background: #b67f4c;
+      border: 3px solid #6b4a2c;
+      border-radius: 50%;
+      top: -10px;
+    }
+
+    .mole .ear.left { left: 10px; }
+    .mole .ear.right { right: 10px; }
+
+    .mole .inner-ear {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #f5d0a9;
+      border-radius: 50%;
+      top: 6px;
+      left: 5px;
+    }
+
+    .mole .eye {
+      position: absolute;
+      width: 9px;
+      height: 12px;
+      background: #111827;
+      border-radius: 50%;
+      top: 30px;
+    }
+
+    .mole .eye.left { left: 24px; }
+    .mole .eye.right { right: 24px; }
+
+    .mole .snout {
+      position: absolute;
+      width: 32px;
+      height: 22px;
+      background: #f3ddc5;
+      border-radius: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 16px;
+      border: 2px solid #8b5e34;
+    }
+
+    .mole .nose {
+      position: absolute;
+      width: 13px;
+      height: 9px;
+      background: #1f2937;
+      border-radius: 50%;
+      left: 50%;
+      top: 4px;
+      transform: translateX(-50%);
+    }
+
+    .mole .jersey {
+      width: 72px;
+      height: 38px;
+      background: white;
+      color: #003b75;
+      border: 3px solid #6b4a2c;
+      border-radius: 14px 14px 10px 10px;
+      margin: -6px auto 0;
+      text-align: center;
+      line-height: 32px;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    .mole.hit {
+      animation: bonk 0.18s linear;
+    }
+
+    @keyframes bonk {
+      0% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(0.88); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+
+    .message {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      color: #dbeafe;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      color: #94a3b8;
+      font-size: 0.92rem;
+    }
+
+    .hammer-cursor {
+      position: fixed;
+      width: 84px;
+      height: 84px;
+      pointer-events: none;
+      left: 0;
+      top: 0;
+      transform: translate(-20px, -10px) rotate(-18deg);
+      transform-origin: 36px 20px;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    .hammer-cursor.show {
+      opacity: 1;
+    }
+
+    .hammer-cursor.swing {
+      animation: malletSwing 0.16s ease-out;
+    }
+
+    .mallet-head {
+      position: absolute;
+      left: 10px;
+      top: 4px;
+      width: 46px;
+      height: 24px;
+      background: linear-gradient(180deg, #f4b183, #d97706);
+      border: 3px solid #7c2d12;
+      border-radius: 10px;
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .mallet-head::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 3px;
+      width: 8px;
+      height: 14px;
+      background: linear-gradient(180deg, #f7c59f, #ea580c);
+      border: 3px solid #7c2d12;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+    }
+
+    .mallet-head::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 3px;
+      width: 8px;
+      height: 14px;
+      background: linear-gradient(180deg, #f7c59f, #ea580c);
+      border: 3px solid #7c2d12;
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .mallet-handle {
+      position: absolute;
+      left: 28px;
+      top: 24px;
+      width: 12px;
+      height: 42px;
+      background: linear-gradient(180deg, #d4a373, #8b5e34);
+      border: 3px solid #6b4423;
+      border-radius: 10px;
+      box-shadow: inset -2px 0 0 rgba(255,255,255,0.18);
+    }
+
+    .mallet-handle::after {
+      content: "";
+      position: absolute;
+      left: -2px;
+      bottom: -6px;
+      width: 12px;
+      height: 10px;
+      background: #6b4423;
+      border-radius: 0 0 10px 10px;
+    }
+
+    @keyframes malletSwing {
+      0% {
+        transform: translate(-20px, -10px) rotate(-18deg);
+      }
+      45% {
+        transform: translate(-12px, -2px) rotate(18deg);
+      }
+      100% {
+        transform: translate(-20px, -10px) rotate(-18deg);
+      }
+    }
+
+    @media (max-width: 780px) {
+      .board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .board {
+        grid-template-columns: 1fr;
+      }
+
+      .hole {
+        min-height: 150px;
+      }
+
+      .hammer-cursor {
+        display: none;
+      }
+
+      .board,
+      .hole,
+      .mole {
+        cursor: pointer;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="top-nav">
+      <a href="../index.html">Professional Page</a>
+      <a href="../fromscratch/fromscratch.html">Scratch Page</a>
+     
+    </nav>
+
+    <div class="header">
+      <div>
+        <h1>Whack-a-Cougar</h1>
+        <p>A BYU-inspired mini game with a cartoon cougar mascot.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Time</span>
+          <span class="value" id="time">20</span>
+        </div>
+        <div class="stat">
+          <span class="label">Best</span>
+          <span class="value" id="best">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="controls">
+        <p>Click the cougar as fast as you can before time runs out.</p>
+        <div class="buttons">
+          <button class="start-btn" id="startBtn">Start Game</button>
+          <button class="reset-btn" id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div class="board" id="board">
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+
+        <div class="hole">
+          <div class="mole">
+            <div class="head">
+              <div class="ear left"><div class="inner-ear"></div></div>
+              <div class="ear right"><div class="inner-ear"></div></div>
+              <div class="eye left"></div>
+              <div class="eye right"></div>
+              <div class="snout"><div class="nose"></div></div>
+            </div>
+            <div class="jersey">Y</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="message" id="message">Press Start Game to begin.</div>
+      
+    </div>
+  </div>
+
+  <div class="hammer-cursor" id="hammerCursor" aria-hidden="true">
+    <div class="mallet-head"></div>
+    <div class="mallet-handle"></div>
+  </div>
+
+  <script>
+    const holes = document.querySelectorAll(".hole");
+    const moles = document.querySelectorAll(".mole");
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const bestEl = document.getElementById("best");
+    const messageEl = document.getElementById("message");
+    const startBtn = document.getElementById("startBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const board = document.getElementById("board");
+    const hammerCursor = document.getElementById("hammerCursor");
+
+    let score = 0;
+    let best = 0;
+    let timeLeft = 20;
+    let gameRunning = false;
+    let gameTimer = null;
+    let popTimer = null;
+
+    function randomHole() {
+      const index = Math.floor(Math.random() * holes.length);
+      return holes[index];
+    }
+
+    function clearMoles() {
+      holes.forEach(hole => hole.classList.remove("up"));
+      moles.forEach(mole => mole.classList.remove("hit"));
+    }
+
+    function updateDisplay() {
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      bestEl.textContent = best;
+    }
+
+    function swingHammer() {
+      hammerCursor.classList.remove("swing");
+      void hammerCursor.offsetWidth;
+      hammerCursor.classList.add("swing");
+    }
+
+    function peep() {
+      if (!gameRunning) return;
+
+      clearMoles();
+      const hole = randomHole();
+      hole.classList.add("up");
+
+      const speed = Math.max(380, 950 - score * 18);
+
+      popTimer = setTimeout(() => {
+        hole.classList.remove("up");
+        peep();
+      }, speed);
+    }
+
+    function startGame() {
+      clearTimeout(popTimer);
+      clearInterval(gameTimer);
+      clearMoles();
+
+      score = 0;
+      timeLeft = 20;
+      gameRunning = true;
+      updateDisplay();
+      messageEl.textContent = "Go! Click the cougar as many times as you can.";
+
+      peep();
+
+      gameTimer = setInterval(() => {
+        timeLeft--;
+        updateDisplay();
+
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearTimeout(popTimer);
+      clearInterval(gameTimer);
+      clearMoles();
+
+      if (score > best) {
+        best = score;
+      }
+
+      updateDisplay();
+      messageEl.textContent = `Time's up! Final score: ${score}. ${score >= 20 ? "Elite Cougar reflexes." : "Nice run — try again."}`;
+    }
+
+    moles.forEach(mole => {
+      mole.addEventListener("click", () => {
+        if (!gameRunning) return;
+        if (!mole.parentElement.classList.contains("up")) return;
+
+        score++;
+        mole.classList.add("hit");
+        mole.parentElement.classList.remove("up");
+        swingHammer();
+        updateDisplay();
+      });
+    });
+
+    board.addEventListener("mouseenter", () => {
+      hammerCursor.classList.add("show");
+    });
+
+    board.addEventListener("mouseleave", () => {
+      hammerCursor.classList.remove("show");
+    });
+
+    board.addEventListener("mousemove", (e) => {
+      hammerCursor.style.left = e.clientX + "px";
+      hammerCursor.style.top = e.clientY + "px";
+    });
+
+    board.addEventListener("mousedown", () => {
+      swingHammer();
+    });
+
+    startBtn.addEventListener("click", startGame);
+
+    resetBtn.addEventListener("click", () => {
+      gameRunning = false;
+      score = 0;
+      timeLeft = 20;
+      clearTimeout(popTimer);
+      clearInterval(gameTimer);
+      clearMoles();
+      updateDisplay();
+      messageEl.textContent = "Game reset. Press Start Game to play again.";
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
